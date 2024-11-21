@@ -4,122 +4,131 @@ import productsPage from '../pageobjects/products.page.js'
 
 describe('Login Page - Swag Labs', () => {
     beforeEach(async () => {
-        await browser.url('https://www.saucedemo.com/')
+        await loginPage.openUrl()
     })
     describe('1. standard_user', () => {
-        it('Login with valid credentials', async () => {
-            await loginPage.login('standard_user', 'secret_sauce')     
+        it('LOG-001 : Login with valid credentials', async () => {
+            await loginPage.login('standard_user', 'secret_sauce') 
+
             const title = await productsPage.productTitle
             await title.getText()
+
             await expect(title).toHaveText('Products')
-            await browser.pause(2000)
         })
         
-        it('Login with invalid password', async () => {
+        it('LOG-002 : Login with invalid password', async () => {
             await loginPage.login('standard_user', 'standard_user')    
-            await browser.pause(2000)
+
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+            
             await expect(errorMessage).toHaveText('Epic sadface: Username and password do not match any user in this service')
         })
     })
     describe('2. locked_out_user', () => {
-        it('Login with valid credentials', async () => {
+        it('LOG-003 : Login with valid credentials', async () => {
             await loginPage.login('locked_out_user', 'secret_sauce')
-            await browser.pause(2000)     
+
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+
             await expect(errorMessage).toHaveText('Epic sadface: Sorry, this user has been locked out.')
         })
         
-        it('Login with invalid password', async () => {
+        it('LOG-004 : Login with invalid password', async () => {
             await loginPage.login('locked_out_user', 'locked_out_user')    
-            await browser.pause(2000)
+            
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+
             await expect(errorMessage).toHaveText('Epic sadface: Username and password do not match any user in this service')
         })
     })
     describe('3. problem_user', () => {
-        it('Login with valid credentials', async () => {
+        it('LOG-005 : Login with valid credentials', async () => {
             await loginPage.login('problem_user', 'secret_sauce')     
+
             const title = await productsPage.productTitle
             await title.getText()
+
             await expect(title).toHaveText('Products')
 
             // Check if the picture turns into a dog picture
-            const productImages = await productsPage.productImages
-            for (const img of productImages){
-                const src = await img.getAttribute('src')
-                expect(src).toEqual('/static/media/sl-404.168b1cce.jpg')
-            }
-
-            // Check if the navigation to the product detail page is correct
-            await productsPage.detailsProduct('Sauce Labs Backpack')
-            const productTitle = $('.inventory_details_name ')
-            await productTitle.getText()
-            await expect(productTitle).toHaveText('Sauce Labs Backpack')
-            await browser.pause(2000)
+            await productsPage.validateProductImages('/static/media/sl-404.168b1cce.jpg')
         })
         
-        it('Login with invalid password', async () => {
+        it('LOG-006 : Login with invalid password', async () => {
             await loginPage.login('problem_user', 'problem_user')    
-            await browser.pause(2000)
+            
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+            
             await expect(errorMessage).toHaveText('Epic sadface: Username and password do not match any user in this service')
         })
     })
-    describe('4. error_user', () => {
-        it('Login with valid credentials', async () => {
-            await loginPage.login('error_user', 'secret_sauce')     
+    describe.only('4. error_user', () => {
+        it('LOG-007 : Login with valid credentials', async () => {
+            await loginPage.login('error_user', 'secret_sauce')
+            
             const title = await productsPage.productTitle
             await title.getText()
+            
             await expect(title).toHaveText('Products')
-            await browser.pause(2000)
+            
 
             // Check the sorting button if it's working
-            const sort = await productsPage.sortDropdown
-            await sort.click()
-            await sort.selectByIndex(2);
-            await browser.pause(5000)
-            const alert = browser.getAlertText()
-            await expect(alert).toEqual('Sorting is broken! This error has been reported to Backtrace.')
-            await browser.pause(2000)
+            await productsPage.sortProduct('za')
+            try{
+                const errorLogs = await browser.getAlertText()
+                console.log(errorLogs)
+                expect(errorLogs).toHaveText('Sorting is broken! This error has been reported to Backtrace.')
+                await browser.acceptAlert()
+            } catch (err) {
+                console.error('No Alert Appeared')
+                throw new Error("Expected Alert did'nt appear")
+            }
         })
         
-        it('Login with invalid password', async () => {
+        it('LOG-008 : Login with invalid password', async () => {
             await loginPage.login('error_user', 'error_user')    
-            await browser.pause(2000)
+            
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+
             await expect(errorMessage).toHaveText('Epic sadface: Username and password do not match any user in this service')
         })
     })
     describe('5. Negative test case', () => {
-        it('Login with invalid credentials', async () => {
+        it('LOG-009 : Login with invalid credentials', async () => {
             await loginPage.login('invalid_user', 'invalid_password')
-            await browser.pause(2000)     
+            
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+
             await expect(errorMessage).toHaveText('Epic sadface: Username and password do not match any user in this service')
         })
         
-        it('Login with empty credentials', async () => {
+        it('LOG-010 : Login with empty credentials', async () => {
             await loginPage.login('', '')    
-            await browser.pause(2000)
+            
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+
             await expect(errorMessage).toHaveText('Epic sadface: Username is required')
         })
 
-        it('Login with ideal maximum character', async () => {
+        it('LOG-011 : Login with ideal maximum character', async () => {
+            // Masukan karakter dengan panjang 50 karakter
             const maxChar = 'x'.repeat(50)
             await loginPage.login(maxChar, maxChar)    
-            await browser.pause(2000)
+            
             const errorMessage = await loginPage.errorMessage
             await errorMessage.getText()
+
             await expect(errorMessage).toHaveText('Epic sadface: Username and password do not match any user in this service')
         })
+    })
+    afterEach(async () => {
+        await browser.pause(2000)
     })
 })

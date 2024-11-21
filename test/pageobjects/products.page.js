@@ -8,6 +8,20 @@ class productsPage {
     get detailsPrice() {return $('.inventory_details_price')}
     get backButton() {return $('#back-to-products')}
     
+    async urlProducts() {
+        await browser.url('https://www.saucedemo.com/inventory.html')
+    }
+
+    async validateProductImages(value) {
+        const image = await this.productImages
+        for(const img of image){
+            const src = await img.getAttribute('src')
+            if (src !== value){
+                throw new Error(`Expected src to be ${value} but got ${src}}`)
+            }
+        }
+    }
+    
     async sortProduct(value) {
         await this.sortDropdown.click()
         await this.sortDropdown.selectByAttribute('value', value)
@@ -21,10 +35,6 @@ class productsPage {
 
     async backToProducts() {
         await this.backButton.click()
-    }
-
-    async urlProducts() {
-        await browser.url('https://www.saucedemo.com/inventory.html')
     }
 }
 
